@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1073162142992",
+    "project_id": "gpsmapcamera-7f97e",
+    "storage_bucket": "gpsmapcamera-7f97e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1073162142992:android:8620d5046438de280b9195",
+        "android_client_info": {
+          "package_name": "com.gps.gps_map_camera"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1073162142992-parbggcmcbuho5q58hcvf8q7dl7i19cr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjWsvHAh9gMhsbwtB1viKF1n16XD2Q608"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1073162142992-parbggcmcbuho5q58hcvf8q7dl7i19cr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

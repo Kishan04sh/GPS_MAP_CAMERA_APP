@@ -1,10 +1,15 @@
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'feature/form_builder/view/dynamic_form_screen.dart';
+import 'core/routing/app_router.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -12,12 +17,10 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      // title: 'GeoProof',
-      title: 'Dynamic Form Demo',
-      theme: ThemeData(primarySwatch: Colors.indigo),
-      home: const DynamicFormScreen(),
+      title: 'GPS Cam Bharat',
+      routerConfig: appRouter,
     );
   }
 }

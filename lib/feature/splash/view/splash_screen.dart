@@ -10,7 +10,8 @@ import '../../auth/model/auth_session.dart';
 
 
 class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({super.key});
+  final bool isBootstrap;
+  const SplashScreen({super.key,this.isBootstrap = false});
 
   @override
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
@@ -65,39 +66,46 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     /// Start sequence
     _logoController.forward().then((_) => _textController.forward());
 
-    // After splash, navigate based on local storage
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _navigateBasedOnLocalStorage();
-    });
+    /// ❗ Only navigate if NOT bootstrap
+    if (!widget.isBootstrap) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateBasedOnLocalStorage();
+      });
+    }
   }
 
 
-/// ***************************************************************************
+  /// ***************************************************************************
 
   Future<void> _navigateBasedOnLocalStorage() async {
-    await Future.delayed(const Duration(seconds: 3)); // Splash duration
+    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final isLoggedIn = await _storage.read(AuthStorageKeys.isLoggedIn);
+      final loginTypeStr = await _storage.read(AuthStorageKeys.loginType);
+      final uid = await _storage.read(AuthStorageKeys.firebaseUid);
+      final mobile = await _storage.read(AuthStorageKeys.mobileNumber);
+      final deviceId = await _storage.read(AuthStorageKeys.deviceId);
+      print("is login: $isLoggedIn  user uid : $uid" );
+      if (isLoggedIn == 'true' && uid != null) { //&& uid != null
+        final session = AuthSession(
+          isLoggedIn: true,
+          loginType: loginTypeStr == 'otp' ? LoginType.otp : LoginType.google,
+          uid: uid,
+          mobile: mobile,
+          deviceId: deviceId ?? 'unknown',
+        );
 
-    final isLoggedIn = await _storage.read(AuthStorageKeys.isLoggedIn);
-    final loginTypeStr = await _storage.read(AuthStorageKeys.loginType);
-    final uid = await _storage.read(AuthStorageKeys.firebaseUid);
-    final mobile = await _storage.read(AuthStorageKeys.mobileNumber);
-    final deviceId = await _storage.read(AuthStorageKeys.deviceId);
-
-    if (isLoggedIn == 'true' && uid != null) {
-      final session = AuthSession(
-        isLoggedIn: true,
-        loginType: loginTypeStr == 'otp' ? LoginType.otp : LoginType.google,
-        uid: uid,
-        mobile: mobile,
-        deviceId: deviceId ?? 'unknown',
-      );
-
-      print('💡 Session loaded: $session');
-      print('➡️ Redirecting to Home');
-      if (!mounted) return;
-      context.go(RouteNames.home);
-    } else {
+        print('💡 Session loaded: $session');
+        print('➡️ Redirecting to Home');
+        if (!mounted) return;
+        context.go(RouteNames.home);
+      } else {
+        if (!mounted) return;
+        context.go(RouteNames.login);
+      }
+    } catch (e) {
       print('💡 No valid session → redirecting to Login');
+      await _storage.clearAll();
       if (!mounted) return;
       context.go(RouteNames.login);
     }

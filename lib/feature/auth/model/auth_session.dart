@@ -1,4 +1,8 @@
-enum LoginType { google, otp }
+enum LoginType {
+  google,
+  otp,
+  email
+}
 
 class AuthSession {
   final bool isLoggedIn;

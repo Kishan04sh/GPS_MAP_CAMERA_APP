@@ -84,11 +84,16 @@ class AuthSessionNotifier extends StateNotifier<AuthState> {
     print('✅ [AuthSession] Login saved: $session');
   }
 
-  /// *************************************************************
-  /// Logout user
+  /// *****************xx Logout user********************************************
+
   Future<void> logout() async {
     try {
       await _storage.write(AuthStorageKeys.isLoggedIn, 'false');
+      await _storage.delete(AuthStorageKeys.firebaseUid);
+      await _storage.delete(AuthStorageKeys.userId);
+      await _storage.delete(AuthStorageKeys.mobileNumber);
+      await _storage.delete(AuthStorageKeys.loginType);
+      await _storage.delete(AuthStorageKeys.deviceId);
       state = AuthState.unauthenticated();
       print('🔴 [AuthSession] Logged out, redirect to login');
     } catch (e) {

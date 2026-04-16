@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -20,20 +21,24 @@ class _MapTabState extends ConsumerState<MapTab> {
   @override
   void initState() {
     super.initState();
+    // Load current location on init
     Future.microtask(() {
       ref.read(mapControllerProvider.notifier).loadCurrentLocation();
     });
   }
 
-
-  /// **************************************************************
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(mapControllerProvider);
     final notifier = ref.read(mapControllerProvider.notifier);
 
-    /// ===================== LOADING =====================
+    // ===================== LOADING =====================
     if (state.status == MapStatus.loading ||
         state.status == MapStatus.initial) {
       return const Center(
@@ -41,19 +46,28 @@ class _MapTabState extends ConsumerState<MapTab> {
       );
     }
 
-    /// ===================== ERROR =====================
+    // ===================== ERROR =====================
     if (state.status == MapStatus.error) {
       return AppErrorScreen(
         message: _mapErrorMessage(state.error),
       );
     }
 
-    /// ===================== SAFETY CHECK =====================
+    // ===================== SAFETY CHECK =====================
     if (state.currentLocation == null) {
       return const AppErrorScreen(
         message: 'Unable to fetch current location',
       );
     }
+
+    // Animate camera to current location if controller is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (controller != null) {
+        controller!.animateCamera(
+          CameraUpdate.newLatLng(state.currentLocation!),
+        );
+      }
+    });
 
     return Stack(
       children: [
@@ -70,34 +84,28 @@ class _MapTabState extends ConsumerState<MapTab> {
           onMapCreated: (c) => controller = c,
         ),
 
-        /// REFRESH
+        // ===================== FABs =====================
         _fab(
           top: 70,
           icon: Icons.my_location,
+          tooltip: 'Refresh Location',
           onTap: notifier.refreshLocation,
         ),
 
-        /// SATELLITE
         _fab(
           top: 135,
           icon: Icons.layers,
+          tooltip: 'Toggle Map Type',
           onTap: notifier.toggleMapType,
         ),
 
-        /// CAMERA
         _fab(
           top: 200,
           icon: Icons.camera_alt,
-          onTap: (){}
-          // onTap: () async {
-          //   final picker = ImagePicker();
-          //   final img = await picker.pickImage(
-          //     source: ImageSource.camera,
-          //   );
-          //   if (img != null) {
-          //     notifier.addPhotoMarker(img.path);
-          //   }
-          //},
+          tooltip: 'Open Camera',
+          onTap: () {
+            // Implement camera functionality
+          },
         ),
       ],
     );
@@ -106,6 +114,7 @@ class _MapTabState extends ConsumerState<MapTab> {
   Set<Marker> _buildMarkers(MapState state) {
     final markers = <Marker>{};
 
+    // User location marker
     markers.add(
       Marker(
         markerId: const MarkerId('me'),
@@ -113,10 +122,11 @@ class _MapTabState extends ConsumerState<MapTab> {
       ),
     );
 
+    // Photo markers
     for (final photo in state.photoMarkers) {
       markers.add(
         Marker(
-          markerId: MarkerId(photo.imagePath),
+          markerId: MarkerId(photo.imagePath), // Ensure unique
           position: photo.position,
           icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueAzure,
@@ -129,27 +139,25 @@ class _MapTabState extends ConsumerState<MapTab> {
   }
 
   Widget _fab({
-    // required double bottom,
     required double top,
     required IconData icon,
     required VoidCallback onTap,
+    String? tooltip,
   }) {
     return Positioned(
       right: 12,
       top: top,
-      // bottom: bottom,
       child: FloatingActionButton(
+        heroTag: 'fab_$top', // Unique hero tag
         backgroundColor: AppColors.white,
         foregroundColor: AppColors.primary,
         onPressed: onTap,
+        tooltip: tooltip,
         child: Icon(icon),
       ),
     );
   }
 
-  /// *****************************************************
-
-  /// ===================== USER FRIENDLY ERROR =====================
   String _mapErrorMessage(String? error) {
     if (error == null) return 'Something went wrong';
 
@@ -167,7 +175,4 @@ class _MapTabState extends ConsumerState<MapTab> {
 
     return 'Unable to fetch location.\nPlease try again.';
   }
-
-/// *******************************************************
-
 }

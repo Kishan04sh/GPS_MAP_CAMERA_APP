@@ -6,9 +6,7 @@ import '../../../core/constants/app_assets.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routing/route_names.dart';
 import '../../../core/widgets/app_snackbar.dart';
-import '../model/otp_state.dart';
 import '../viewmodel/auth_view_model.dart';
-import '../viewmodel/otp_auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -19,49 +17,52 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController mobileController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
   bool isMobileValid = false;
   String? errorText;
 
  /// *********initState****************
-  @override
-  void initState() {
-    super.initState();
-    mobileController.addListener(onMobileChanged);
-  }
-
+ //  @override
+ //  void initState() {
+ //    super.initState();
+ //    mobileController.addListener(onMobileChanged);
+ //  }
 
   /// ********onMobileChanged*********************
 
-  void onMobileChanged() {
-    final value = mobileController.text.trim();
-    if (value.isEmpty) {
-      _updateValidation(false, null);
-      return;
-    }
-    final isValid = RegExp(r'^[6-9]\d{9}$').hasMatch(value);
-    _updateValidation(
-      isValid,
-      isValid ? null : 'Enter valid 10-digit mobile number',
-    );
-  }
-
-
-  /// **********_updateValidation*********************************
-  void _updateValidation(bool valid, String? error) {
-    if (isMobileValid != valid || errorText != error) {
-      setState(() {
-        isMobileValid = valid;
-        errorText = error;
-      });
-    }
-  }
+  // void onMobileChanged() {
+  //   final value = mobileController.text.trim();
+  //   if (value.isEmpty) {
+  //     _updateValidation(false, null);
+  //     return;
+  //   }
+  //   final isValid = RegExp(r'^[6-9]\d{9}$').hasMatch(value);
+  //   _updateValidation(
+  //     isValid,
+  //     isValid ? null : 'Enter valid 10-digit mobile number',
+  //   );
+  // }
+  //
+  //
+  // /// **********_updateValidation*********************************
+  // void _updateValidation(bool valid, String? error) {
+  //   if (isMobileValid != valid || errorText != error) {
+  //     setState(() {
+  //       isMobileValid = valid;
+  //       errorText = error;
+  //     });
+  //   }
+  // }
 
 
   /// **************************************************
   @override
   void dispose() {
-    mobileController.removeListener(onMobileChanged);
+   // mobileController.removeListener(onMobileChanged);
     mobileController.dispose();
+    passwordController.dispose();
+    emailController.dispose();
     super.dispose();
   }
 
@@ -71,8 +72,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final otpState = ref.watch(otpAuthControllerProvider);
-    final otpController = ref.read(otpAuthControllerProvider.notifier);
+    // final otpState = ref.watch(otpAuthControllerProvider);
+    // final otpController = ref.read(otpAuthControllerProvider.notifier);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -94,7 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: IntrinsicHeight(
                 child: Column(
                   children: [
-                    SizedBox(height: size.height * 0.08),
+                    SizedBox(height: size.height * 0.1),
 
                     // ================= LOGO =================
                     Container(
@@ -113,8 +114,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: ClipOval(
                         child: Image.asset(
                           AppImages.sp1,
-                          height: size.width * 0.30,
-                          width: size.width * 0.30,
+                          height: size.width * 0.35,
+                          width: size.width * 0.35,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -144,24 +145,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
 
                     SizedBox(height: size.height * 0.07),
+                    //const Spacer(),
 
                     // ================= MOBILE INPUT =================
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 26),
+                    //   child: TextField(
+                    //     controller: mobileController,
+                    //     keyboardType: TextInputType.phone,
+                    //     maxLength: 10,
+                    //     style: const TextStyle(color: AppColors.black),
+                    //     decoration: InputDecoration(
+                    //       counterText: '',
+                    //       filled: true,
+                    //       fillColor: AppColors.white,
+                    //       hintText: 'Enter mobile number',
+                    //       prefixIcon: const Icon(Icons.phone_android),
+                    //       errorText: errorText,
+                    //       errorStyle: TextStyle(color: Colors.red[900],
+                    //           fontSize: 15,fontWeight: FontWeight.w600),
+                    //       border: OutlineInputBorder(
+                    //         borderRadius: BorderRadius.circular(8),
+                    //         borderSide: BorderSide.none,
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+
+
+                    //==========================================
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 26),
                       child: TextField(
-                        controller: mobileController,
-                        keyboardType: TextInputType.phone,
-                        maxLength: 10,
-                        style: const TextStyle(color: AppColors.black),
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          counterText: '',
                           filled: true,
                           fillColor: AppColors.white,
-                          hintText: 'Enter mobile number',
-                          prefixIcon: const Icon(Icons.phone_android),
-                          errorText: errorText,
-                          errorStyle: TextStyle(color: Colors.red[900],
-                              fontSize: 15,fontWeight: FontWeight.w600),
+                          hintText: 'Enter email',
+                          prefixIcon: const Icon(Icons.email),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide.none,
@@ -170,67 +192,202 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
 
-                    SizedBox(height: size.height * 0.035),
+                    SizedBox(height: size.height * 0.025),
 
-                    // ================= CONTINUE BUTTON =================
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 26),
-                      child: ElevatedButton(
-                        onPressed: ( !isMobileValid || otpState.isLoading)
-                            ? null
-                            : () async {
-
-                          final mobile = mobileController.text.trim();
-
-                          if (mobile.length != 10) {
-                            AppSnackbar.show(context, message: "Enter valid mobile number",
-                                type: SnackbarType.error);
-                            return;
-                          }
-
-                          await otpController.sendOtp(mobile);
-
-                          final state = ref.read(otpAuthControllerProvider);
-                          if (!context.mounted) return;
-
-                          if (state.status == OtpStatus.sent) {
-                            context.go(RouteNames.otpVerify);
-                          } else if (state.status == OtpStatus.failure) {
-                            AppSnackbar.show(
-                              context,
-                              message: state.isError.toString(),
-                              type: SnackbarType.error,
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isMobileValid
-                              ? AppColors.success
-                              : AppColors.grey400,
-                          disabledBackgroundColor: AppColors.grey400,
-                          minimumSize: const Size(double.infinity, 52),
-                          shape: RoundedRectangleBorder(
+                      child: TextField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: AppColors.white,
+                          hintText: 'Enter password',
+                          prefixIcon: const Icon(Icons.lock),
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
                           ),
-                          elevation: 3,
-                        ),
-                        child: otpState.isLoading
-                            ? const SizedBox(
-                          height: 25,
-                          width: 25,
-                          child: CircularProgressIndicator(
-                            color: AppColors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                            : const Text('Continue With OTP',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.white),
                         ),
                       ),
                     ),
+
+                    //==============================================
+
+                    SizedBox(height: size.height * 0.035),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 26),
+                      child: Consumer(
+                        builder: (context, ref, _) {
+                          final authState = ref.watch(authViewModelProvider);
+
+                          return ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.success,
+                              minimumSize: const Size(double.infinity, 52),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+
+                            onPressed: authState.status == AuthStatus.emailLoading
+                                ? null
+                                : () async {
+                              final email = emailController.text.trim();
+                              final password = passwordController.text.trim();
+
+                              /// 🔴 EMPTY CHECK
+                              if (email.isEmpty || password.isEmpty) {
+                                AppSnackbar.show(
+                                  context,
+                                  message: "Enter email & password",
+                                  type: SnackbarType.error,
+                                );
+                                return;
+                              }
+
+                              /// 🔴 PASSWORD VALIDATION
+                              if (password.length < 6) {
+                                AppSnackbar.show(
+                                  context,
+                                  message: "Password must be at least 6 characters",
+                                  type: SnackbarType.error,
+                                );
+                                return;
+                              }
+
+                              /// 🔵 FIREBASE LOGIN
+                              await ref
+                                  .read(authViewModelProvider.notifier)
+                                  .loginWithEmail(email, password);
+
+                              final state = ref.read(authViewModelProvider);
+
+                              if (!context.mounted) return;
+
+                              /// 🔴 1. NEED REGISTRATION (MOST IMPORTANT)
+                              if (state.status == AuthStatus.needsRegistration) {
+                                context.push(
+                                  RouteNames.signup,
+                                  extra: state.user, // same as google
+                                );
+                                return;
+                              }
+
+                              /// ✅ 2. AUTHENTICATED
+                              if (state.status == AuthStatus.authenticated) {
+                                AppSnackbar.show(
+                                  context,
+                                  message: "Login successful",
+                                  type: SnackbarType.success,
+                                );
+
+                                context.go(RouteNames.home);
+                                return;
+                              }
+
+                              /// ❌ 3. ERROR
+                              if (state.status == AuthStatus.error) {
+                                AppSnackbar.show(
+                                  context,
+                                  message: state.errorMessage ?? "Login failed",
+                                  type: SnackbarType.error,
+                                );
+                              }
+                            },
+
+                            child: authState.status == AuthStatus.emailLoading
+                                ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.white,
+                              ),
+                            )
+                                : const Text(
+                              "Continue",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.white,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    // ================= CONTINUE BUTTON =================
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 26),
+                    //   child: ElevatedButton(
+                    //     // onPressed: ( !isMobileValid || otpState.isLoading)
+                    //     //     ? null
+                    //     //     : () async {
+                    //     //
+                    //     //   final mobile = mobileController.text.trim();
+                    //     //
+                    //     //   if (mobile.length != 10) {
+                    //     //     AppSnackbar.show(context, message: "Enter valid mobile number",
+                    //     //         type: SnackbarType.error);
+                    //     //     return;
+                    //     //   }
+                    //     //
+                    //     //   await otpController.sendOtp(mobile);
+                    //     //
+                    //     //   final state = ref.read(otpAuthControllerProvider);
+                    //     //   if (!context.mounted) return;
+                    //     //
+                    //     //   if (state.status == OtpStatus.sent) {
+                    //     //     context.go(RouteNames.otpVerify);
+                    //     //   } else if (state.status == OtpStatus.failure) {
+                    //     //     AppSnackbar.show(
+                    //     //       context,
+                    //     //       message: state.isError.toString(),
+                    //     //       type: SnackbarType.error,
+                    //     //     );
+                    //     //   }
+                    //     // },
+                    //
+                    //     // onPressed: () {
+                    //     //   Navigator.push(
+                    //     //     context,
+                    //     //     MaterialPageRoute(
+                    //     //       builder: (context) => const SignupScreen(),
+                    //     //     ),
+                    //     //   );
+                    //     // },
+                    //
+                    //     style: ElevatedButton.styleFrom(
+                    //       backgroundColor: isMobileValid
+                    //           ? AppColors.success
+                    //           : AppColors.grey400,
+                    //       disabledBackgroundColor: AppColors.grey400,
+                    //       minimumSize: const Size(double.infinity, 52),
+                    //       shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(8),
+                    //       ),
+                    //       elevation: 3,
+                    //     ),
+                    //     child: otpState.isLoading
+                    //         ? const SizedBox(
+                    //       height: 25,
+                    //       width: 25,
+                    //       child: CircularProgressIndicator(
+                    //         color: AppColors.white,
+                    //         strokeWidth: 2,
+                    //       ),
+                    //     )
+                    //         : const Text('Continue With OTP',
+                    //       style: TextStyle(
+                    //           fontSize: 16,
+                    //           fontWeight: FontWeight.w600,
+                    //           color: AppColors.white),
+                    //     ),
+                    //   ),
+                    // ),
 
                     SizedBox(height: size.height * 0.035),
 
@@ -239,8 +396,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 26, vertical: 6),
                       child: Row(
                         children: [
-                          Expanded(child:
-                              Divider(color: AppColors.grey300)),
+                          Expanded(child: Divider(color: AppColors.grey300)),
                           Padding(
                             padding:
                             EdgeInsets.symmetric(horizontal: 12),
@@ -258,7 +414,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
 
-                    SizedBox(height: size.height * 0.02),
+                    // SizedBox(height: size.height * 0.1),
+                    SizedBox(height: size.height * 0.035),
 
                     // ================= GOOGLE BUTTON =================
                     Padding(
@@ -318,23 +475,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
 
  /// ************************************************************
-      onPressed: authState.status == AuthStatus.loading
+
+      onPressed: authState.status == AuthStatus.googleLoading
           ? null
           : () async {
         await authVM.loginWithGoogle();
         final updatedState = ref.read(authViewModelProvider);
+        /// 🔴 1. NEEDS REGISTRATION (MOST IMPORTANT)
+        if (updatedState.status == AuthStatus.needsRegistration && context.mounted) {
+          context.push(
+            RouteNames.signup,
+            extra: updatedState.user, // ✅ PASS DATA
+          );
+          return;
+        }
 
+        /// ✅ 2. AUTHENTICATED
         if (updatedState.status == AuthStatus.authenticated && context.mounted) {
           AppSnackbar.show(
             context,
             message: "Login successful",
             type: SnackbarType.success,
           );
+
           context.go(RouteNames.home);
+          return;
         }
 
-        if (updatedState.status == AuthStatus.error &&
-            context.mounted) {
+        /// ❌ 3. ERROR
+        if (updatedState.status == AuthStatus.error && context.mounted) {
           AppSnackbar.show(
             context,
             message: updatedState.errorMessage ?? 'Login failed',
@@ -343,7 +512,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
       },
  /// *****************************************************************************
-      child: authState.status == AuthStatus.loading
+      child: authState.status == AuthStatus.googleLoading
           ? const SizedBox(
         height: 25,
         width: 25,

@@ -11,41 +11,78 @@ class LocationNotifier extends StateNotifier<Position?> {
   LocationNotifier() : super(null);
 
   StreamSubscription<Position>? _sub;
+  
+  /// *******************initLocation ******************************************
 
   Future<void> initLocation() async {
-    debugPrint('[LOCATION] Checking services…');
+    try {
+      debugPrint('[LOCATION] Checking services…');
+      if (!await Geolocator.isLocationServiceEnabled()) return;
 
-    if (!await Geolocator.isLocationServiceEnabled()) {
-      debugPrint('[LOCATION] Service disabled');
-      return;
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) return;
+
+      debugPrint('[LOCATION] Fetching initial position…');
+      state = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      debugPrint('[LOCATION] Starting position stream');
+      _sub = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10,
+        ),
+      ).listen((pos) {
+        try {
+          if (_sub == null) return; // ✅ disposed
+          state = pos;
+        } catch (e) {
+          debugPrint('[LOCATION][STREAM UPDATE ERROR] $e');
+        }
+      });
+    } catch (e) {
+      debugPrint('[LOCATION][INIT ERROR] $e');
     }
+  }
 
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
 
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      debugPrint('[LOCATION] Permission denied');
-      return;
-    }
+/// *******************ADD BY CAPTURE ******************************************
 
-    debugPrint('[LOCATION] Fetching initial position…');
-    state = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+  Future<bool> waitFirstAccurateFix({int timeout = 10}) async {
+    final completer = Completer<bool>();
 
-    debugPrint('[LOCATION] Starting position stream');
-    _sub = Geolocator.getPositionStream(
+    late StreamSubscription sub;
+
+    sub = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 0,
       ),
     ).listen((pos) {
-      state = pos;
+      if (pos.accuracy <= 25) {
+        completer.complete(true);
+        sub.cancel();
+      }
     });
+
+    Future.delayed(Duration(seconds: timeout), () {
+      if (!completer.isCompleted) {
+        completer.complete(false);
+        sub.cancel();
+      }
+    });
+
+    return completer.future;
   }
+
+
+  ///*************************************************************************************
+
 
   @override
   void dispose() {

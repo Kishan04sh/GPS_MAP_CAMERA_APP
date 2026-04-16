@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1073162142992-e67d1q3luvgqijlabnr2vijn1jog135o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gps.gps_map_camera",
+            "certificate_hash": "7b2dba698ef734d8b2d90127bc166bac9c85685d"
+          }
+        },
+        {
           "client_id": "1073162142992-parbggcmcbuho5q58hcvf8q7dl7i19cr.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +37,13 @@
             {
               "client_id": "1073162142992-parbggcmcbuho5q58hcvf8q7dl7i19cr.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "1073162142992-25udea0kbcsjksos8cr8ohvop6ae3fp4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.gps.gpsMapCamera"
+              }
             }
           ]
         }

@@ -9,7 +9,7 @@ import '../modal/camera_state.dart';
 final cameraProvider =
 StateNotifierProvider<CameraNotifier, CameraState>((ref) {
   final notifier = CameraNotifier();
-  ref.onDispose(notifier.disposeCamera);
+  ref.onDispose(() => notifier.disposeCamera()); // ✅ यह सही है
   return notifier;
 });
 
@@ -127,21 +127,6 @@ class CameraNotifier extends StateNotifier<CameraState>
   }
 
   // ================= CAPTURE =================
-  // Future<File?> capture() async {
-  //   if (!state.isReady || state.isRecording) return null;
-  //   try {
-  //     final xfile = await state.controller!.takePicture();
-  //     final dir = await getApplicationDocumentsDirectory();
-  //     final path = '${dir.path}/photo_${DateTime.now().millisecondsSinceEpoch}.jpg';
-  //     await xfile.saveTo(path);
-  //     return File(path);
-  //   } catch (e) {
-  //     debugPrint('[CAMERA][CAPTURE ERROR] $e');
-  //     return null;
-  //   }
-  // }
-
-  // ================= CAPTURE =================
   Future<File?> capture() async {
     if (!state.isReady || state.isRecording) return null;
     try {
@@ -211,5 +196,15 @@ class CameraNotifier extends StateNotifier<CameraState>
     disposeCamera();
     super.dispose();
   }
+
+  void detachPreviewSafely() {
+    if (state.disposed) return;
+    try {
+      state = state.copyWith(controller: null);
+    } catch (_) {}
+  }
+
+
+
 }
 

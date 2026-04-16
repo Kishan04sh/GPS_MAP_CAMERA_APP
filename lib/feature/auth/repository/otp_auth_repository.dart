@@ -9,8 +9,10 @@ class OtpAuthRepository {
     required String otp,
   }) async {
     try {
-      await _api.sendSmsOtp(mobile: mobile, otp: otp);
+      // await _api.sendSmsOtp(mobile: mobile, otp: otp);
+      await _api.sendWhatsappOtp(mobile, otp);
     } on ApiException catch (e) {
+      print("OTP sending failed: ${e.message}");
       throw ApiException("OTP sending failed: ${e.message}");
     }
   }

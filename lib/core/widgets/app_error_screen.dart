@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../constants/app_colors.dart';
+import '../routing/route_names.dart';
 
 class AppErrorScreen extends StatelessWidget {
   final String message;
@@ -75,7 +76,7 @@ class AppErrorScreen extends StatelessWidget {
 
               /// Action Button
               ElevatedButton.icon(
-                onPressed: () => context.go('/'),
+                onPressed: () => context.go(RouteNames.home),
                 icon: const Icon(Icons.home_rounded),
                 label: const Text("Go to Home"),
                 style: ElevatedButton.styleFrom(

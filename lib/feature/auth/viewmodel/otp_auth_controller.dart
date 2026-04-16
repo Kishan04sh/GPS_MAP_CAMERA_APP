@@ -3,12 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../model/auth_session.dart';
 import '../model/otp_state.dart';
 import '../repository/otp_auth_repository.dart';
+import '../repository/user_repository.dart';
 import 'auth_session_notifier.dart';
 
-// final otpAuthControllerProvider =
-// StateNotifierProvider<OtpAuthController, OtpAuthState>(
-//       (ref) => OtpAuthController(OtpAuthRepository()),
-// );
 
 
 final otpAuthControllerProvider =
@@ -60,9 +57,38 @@ class OtpAuthController extends StateNotifier<OtpAuthState> {
   }
 
 
-  /// *******************************************************************
+  /// ***************************yah add karn hai****************************************
 
-  Future<void> verifyOtp(String input) async {
+  // Future<void> verifyOtp(String input) async {
+  //   if (state.expiresAt == null || DateTime.now().isAfter(state.expiresAt!)) {
+  //     state = state.copyWith(
+  //       status: OtpStatus.failure,
+  //       error: "OTP expired",
+  //     );
+  //     return;
+  //   }
+  //
+  //   if (input != _generatedOtp) {
+  //     state = state.copyWith(
+  //       status: OtpStatus.failure,
+  //       error: "Invalid OTP",
+  //     );
+  //     return;
+  //   }
+  //
+  //   final authSessionNotifier = _ref.read(authSessionProvider.notifier);
+  //
+  //   await authSessionNotifier.saveLogin(
+  //     mobile: state.mobile,
+  //     loginType: LoginType.otp,
+  //   );
+  //
+  //   _generatedOtp = null;
+  //   state = state.copyWith(status: OtpStatus.success);
+  // }
+
+  Future<void> verifyOtp(String input) async{
+    /// 1️⃣ OTP expiry check
     if (state.expiresAt == null || DateTime.now().isAfter(state.expiresAt!)) {
       state = state.copyWith(
         status: OtpStatus.failure,
@@ -71,6 +97,7 @@ class OtpAuthController extends StateNotifier<OtpAuthState> {
       return;
     }
 
+    /// 2️⃣ OTP match check
     if (input != _generatedOtp) {
       state = state.copyWith(
         status: OtpStatus.failure,
@@ -79,15 +106,43 @@ class OtpAuthController extends StateNotifier<OtpAuthState> {
       return;
     }
 
-    final authSessionNotifier = _ref.read(authSessionProvider.notifier);
+    try {
+      final userRepository = _ref.read(userRepositoryProvider);
+      /// 3️⃣ BACKEND USER CHECK / ADD
+      final result = await userRepository.addUser(
+        phone: state.mobile!,
+        fireBaseId: "NA", // OTP login → no firebase
+        name: "NA",
+        email: "NA",
+        city: LoginType.otp.toString(),
+      );
 
-    await authSessionNotifier.saveLogin(
-      mobile: state.mobile,
-      loginType: LoginType.otp,
-    );
+      /// 4️⃣ Backend failure
+      if (!result.success) {
+        state = state.copyWith(
+          status: OtpStatus.failure,
+          error: result.message,
+        );
+        return;
+      }
 
-    _generatedOtp = null;
-    state = state.copyWith(status: OtpStatus.success);
+      /// 5️⃣ Save session (userId already stored in repository)
+      final authSessionNotifier = _ref.read(authSessionProvider.notifier);
+
+      await authSessionNotifier.saveLogin(
+        mobile: state.mobile,
+        loginType: LoginType.otp,
+      );
+
+      /// 6️⃣ Cleanup + success
+      _generatedOtp = null;
+      state = state.copyWith(status: OtpStatus.success);
+    }catch (e) {
+      state = state.copyWith(
+        status: OtpStatus.failure,
+        error: "Something went wrong. Please try again.",
+      );
+    }
   }
 
   /// *************************************************************************

@@ -1,12 +1,10 @@
 
+/*
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/routing/route_names.dart';
-import '../../../core/widgets/app_animated_loader.dart';
-import '../../auth/viewmodel/auth_view_model.dart';
 import '../viewmodal/permission_controller.dart';
+import '../widgets/logout_tile.dart';
 
 class SettingsTab extends ConsumerWidget {
   const SettingsTab({super.key});
@@ -22,17 +20,35 @@ class SettingsTab extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+
             const SizedBox(height: 12),
 
-            // ================= Permissions Section =================
-            Text(
-              'App Permissions',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
+            // ✅ PROFILE HEADER
+            const ProfileHeader(
+              name: "Kishan User",
+              email: "kishan@gmail.com",
             ),
+
+
+            const SizedBox(height: 12),
+
+
+            // ================= PROFILE DETAILS =================
+            _sectionTitle("Profile Details"),
+            const SizedBox(height: 10),
+
+            _infoCard([
+              _infoRow(Icons.location_city, "City", "Navi Mumbai"),
+              _divider(),
+              _infoRow(Icons.work, "Profession", "Flutter Developer"),
+              _divider(),
+              _infoRow(Icons.pin_drop, "Pincode", "400701"),
+              _divider(),
+              _infoRow(Icons.calendar_today, "Joined", "2026-02-16"),
+            ]),
+            const SizedBox(height: 12),
+            // ================= PERMISSIONS =================
+            _sectionTitle("App Permissions"),
             const SizedBox(height: 12),
 
             PermissionTile(
@@ -40,7 +56,9 @@ class SettingsTab extends ConsumerWidget {
               granted: state.cameraGranted,
               onTap: controller.requestPermissions,
             ),
+
             const SizedBox(height: 12),
+
             PermissionTile(
               title: 'Location Permission',
               granted: state.locationGranted,
@@ -62,186 +80,314 @@ class SettingsTab extends ConsumerWidget {
 
             const Divider(height: 32, thickness: 1),
 
-            // ================= Logout Section =================
-            Text(
-              'Account',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
+            // ================= ACCOUNT =================
+            _sectionTitle("Account"),
             const SizedBox(height: 12),
-
             const LogoutTile(),
-
             const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
+
+  /// ================= SECTION TITLE =================
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: Colors.grey.shade800,
+      ),
+    );
+  }
+
+  /// ================= CARD CONTAINER =================
+  Widget _infoCard(List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  /// ================= INFO ROW (OVERFLOW SAFE) =================
+  Widget _infoRow(IconData icon, String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+
+          const SizedBox(width: 10),
+
+          Expanded(
+            flex: 3,
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontSize: 14,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ================= DIVIDER =================
+  Widget _divider() {
+    return Divider(
+      height: 1,
+      thickness: 0.8,
+      color: Colors.grey.shade200,
+    );
+  }
+
+
+
+}
+*/
+
+
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/constants/app_colors.dart';
+import '../viewmodal/permission_controller.dart';
+import '../viewmodal/setting_controller.dart';
+import '../widgets/logout_tile.dart';
+import '../widgets/permisstion_tile_widget.dart';
+import '../widgets/profile_widgets.dart';
+
+
+class SettingsTab extends ConsumerStatefulWidget {
+  const SettingsTab({super.key});
+
+  @override
+  ConsumerState<SettingsTab> createState() => _SettingsTabState();
 }
 
-// ================= Modern Permission Tile =================
-class PermissionTile extends StatelessWidget {
-  final String title;
-  final bool granted;
-  final VoidCallback onTap;
+class _SettingsTabState extends ConsumerState<SettingsTab> {
 
-  const PermissionTile({
-    super.key,
-    required this.title,
-    required this.granted,
-    required this.onTap,
-  });
+  @override
+  void initState() {
+    super.initState();
+
+    // ✅ Load user once
+    Future.microtask(() {
+      ref.read(settingsControllerProvider.notifier).getUser();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final permissionState = ref.watch(permissionStateProvider);
+    final permissionController = ref.read(permissionStateProvider.notifier);
+    final user = ref.watch(userProvider);
+    final loadingState = ref.watch(settingsControllerProvider);
+
+    return Scaffold(
+      backgroundColor:
+      AppColors.blueActionGradient.colors.first.withOpacity(0.05),
+      body: SafeArea(
+        child: loadingState is AsyncLoading
+            ? const Center(child: CircularProgressIndicator())
+            : user == null
+            ? const Center(child: Text("No user data found"))
+            : ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+
+            const SizedBox(height: 12),
+
+            // ================= PROFILE HEADER =================
+            ProfileHeader(
+              name: user.name,
+              email: user.email,
+            ),
+
+            const SizedBox(height: 16),
+
+            // ================= PROFILE DETAILS =================
+            _sectionTitle("Profile Details"),
+            const SizedBox(height: 10),
+
+            _infoCard([
+              _infoRow(Icons.location_city, "City", user.city),
+              _divider(),
+              _infoRow(Icons.work, "Profession", user.profession),
+              _divider(),
+              _infoRow(Icons.pin_drop, "Pincode", user.pincode),
+              _divider(),
+              _infoRow(Icons.calendar_today, "Joined", user.formattedDate),
+            ]),
+
+            const SizedBox(height: 16),
+
+            // ================= PERMISSIONS =================
+            _sectionTitle("App Permissions"),
+            const SizedBox(height: 10),
+
+            PermissionTile(
+              title: 'Camera Permission',
+              granted: permissionState.cameraGranted,
+              onTap: permissionController.requestPermissions,
+            ),
+
+            const SizedBox(height: 12),
+
+            PermissionTile(
+              title: 'Location Permission',
+              granted: permissionState.locationGranted,
+              onTap: permissionController.requestPermissions,
+            ),
+
+            const SizedBox(height: 12),
+
+            _settingsTile(
+              icon: Icons.settings,
+              title: "Open App Settings",
+              onTap: permissionController.openAppSettings,
+            ),
+
+            const SizedBox(height: 20),
+
+            // ================= ACCOUNT =================
+            _sectionTitle("Account"),
+            const SizedBox(height: 10),
+
+            const LogoutTile(),
+
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ================= SECTION TITLE =================
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: Colors.grey.shade800,
+      ),
+    );
+  }
+
+  // ================= CARD =================
+  Widget _infoCard(List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  // ================= INFO ROW =================
+  Widget _infoRow(IconData icon, String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+
+          const SizedBox(width: 10),
+
+          Expanded(
+            flex: 3,
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontSize: 14,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= DIVIDER =================
+  Widget _divider() {
+    return Divider(
+      height: 1,
+      thickness: 0.8,
+      color: Colors.grey.shade200,
+    );
+  }
+
+  // ================= SETTINGS TILE =================
+  Widget _settingsTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
     return Container(
       decoration: BoxDecoration(
-        color: granted ? Colors.green.shade50 : Colors.red.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: granted ? Colors.green.shade200 : Colors.red.shade200,
-          width: 1,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: ListTile(
-        leading: CircleAvatar(
-          radius: 18,
-          backgroundColor: granted ? Colors.green : Colors.red,
-          child: Icon(
-            granted ? Icons.check : Icons.close,
-            size: 20,
-            color: Colors.white,
-          ),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        subtitle: Text(
-          granted ? 'Granted' : 'Not granted',
-          style: TextStyle(
-            color: granted ? Colors.green.shade700 : Colors.red.shade700,
-          ),
-        ),
-        trailing: Switch(
-          value: granted,
-          onChanged: (_) {
-            if (!granted) onTap();
-          },
-          activeColor: Colors.green,
-          inactiveThumbColor: Colors.redAccent,
-        ),
+        leading: Icon(icon, color: AppColors.primary),
+        title: Text(title),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+        onTap: onTap,
       ),
     );
   }
 }
 
-
-/// *************************************************************************
-
-class LogoutTile extends ConsumerWidget {
-  const LogoutTile({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.red.shade200,
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () async {
-          // 1️⃣ Show loader immediately
-          AppAnimatedLoader.show(
-            context,
-            message: 'Signing you out…',
-          );
-
-          try {
-            // 2️⃣ Perform logout
-            await ref.read(authViewModelProvider.notifier).logout();
-
-            // 3️⃣ Navigate after logout
-            if (context.mounted) {
-              context.go(RouteNames.login);
-            }
-          } finally {
-            // 4️⃣ Always hide loader (success or error)
-            if (context.mounted) {
-              AppAnimatedLoader.hide(context);
-            }
-          }
-        },
-        // onTap: () async {
-        //   await ref.read(authViewModelProvider.notifier).logout();
-        //   if (context.mounted) {
-        //     context.go(RouteNames.login);
-        //   }
-        // },
-        child: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              /// LEADING ICON (same pattern as PermissionTile)
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.red,
-                child: Icon(
-                  Icons.logout,
-                  size: 18,
-                  color: Colors.white,
-                ),
-              ),
-
-              SizedBox(width: 12),
-
-              /// TEXT CONTENT
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Logout',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.red,
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Sign out from your account',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.redAccent,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              /// TRAILING ICON
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Colors.red,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

@@ -7,7 +7,6 @@ import 'package:gps_map_camera/core/constants/app_colors.dart';
 import 'package:gps_map_camera/core/widgets/app_snackbar.dart';
 import 'package:gps_map_camera/core/widgets/static_map_preview.dart';
 import 'package:intl/intl.dart';
-
 import 'camera_bottom_bar.dart';
 
 class BottomInfoPanel extends StatefulWidget {

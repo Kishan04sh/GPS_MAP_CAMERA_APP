@@ -19,10 +19,12 @@ class AddressNotifier extends StateNotifier<String?> {
   final Ref ref;
   Timer? _debounce;
   StreamSubscription<Position?>? _sub;
+  bool _disposed = false; // ✅ added flag
 
+
+  /// *************************************************************************
   void _startListening() {
     debugPrint('[ADDRESS] Listening to location updates');
-
     _sub = ref
         .read(locationProvider.notifier)
         .stream
@@ -30,46 +32,40 @@ class AddressNotifier extends StateNotifier<String?> {
       if (pos == null) return;
 
       _debounce?.cancel();
-      _debounce = Timer(const Duration(seconds: 2), () {
+      _debounce = Timer(const Duration(seconds: 1), () {
         _reverseGeocode(pos);
       });
     });
   }
 
+
   Future<void> _reverseGeocode(Position pos) async {
-    debugPrint(
-      '[ADDRESS] Reverse geocoding '
-          '(${pos.latitude}, ${pos.longitude})',
-    );
+    debugPrint('[ADDRESS] Reverse geocoding (${pos.latitude}, ${pos.longitude})');
 
     try {
-      final placemarks = await placemarkFromCoordinates(
-        pos.latitude,
-        pos.longitude,
-      );
+      if (_disposed) return; // ✅ disposed check
+
+      final placemarks = await placemarkFromCoordinates(pos.latitude, pos.longitude);
+
+      if (_disposed) return; // ✅ disposed check after await
 
       if (placemarks.isEmpty) {
-        state = 'Address not found';
+        if (!_disposed) state = 'Address not found';
         return;
       }
 
       final p = placemarks.first;
-
-      // BUILD FULL ADDRESS SAFELY
       final parts = <String>[
         if (p.name?.isNotEmpty == true) p.name!,
         if (p.subLocality?.isNotEmpty == true) p.subLocality!,
         if (p.locality?.isNotEmpty == true) p.locality!,
-        if (p.subAdministrativeArea?.isNotEmpty == true)
-          p.subAdministrativeArea!,
-        if (p.administrativeArea?.isNotEmpty == true)
-          p.administrativeArea!,
+        if (p.subAdministrativeArea?.isNotEmpty == true) p.subAdministrativeArea!,
+        if (p.administrativeArea?.isNotEmpty == true) p.administrativeArea!,
         if (p.postalCode?.isNotEmpty == true) p.postalCode!,
         if (p.country?.isNotEmpty == true) p.country!,
       ];
 
-
-      state = parts.join(', ');
+      if (!_disposed) state = parts.join(', '); // ✅ safe state update
 
       debugPrint('[ADDRESS] Updated → $state');
     } catch (e) {
@@ -77,15 +73,57 @@ class AddressNotifier extends StateNotifier<String?> {
     }
   }
 
+
   @override
   void dispose() {
     debugPrint('[ADDRESS] Disposing');
+    _disposed = true; // ✅ mark as disposed
     _debounce?.cancel();
     _sub?.cancel();
     super.dispose();
   }
 }
 
+// Future<void> _reverseGeocode(Position pos) async {
+//   debugPrint(
+//     '[ADDRESS] Reverse geocoding '
+//         '(${pos.latitude}, ${pos.longitude})',
+//   );
+//
+//   try {
+//     final placemarks = await placemarkFromCoordinates(
+//       pos.latitude,
+//       pos.longitude,
+//     );
+//
+//     if (placemarks.isEmpty) {
+//       state = 'Address not found';
+//       return;
+//     }
+//
+//     final p = placemarks.first;
+//
+//     // BUILD FULL ADDRESS SAFELY
+//     final parts = <String>[
+//       if (p.name?.isNotEmpty == true) p.name!,
+//       if (p.subLocality?.isNotEmpty == true) p.subLocality!,
+//       if (p.locality?.isNotEmpty == true) p.locality!,
+//       if (p.subAdministrativeArea?.isNotEmpty == true)
+//         p.subAdministrativeArea!,
+//       if (p.administrativeArea?.isNotEmpty == true)
+//         p.administrativeArea!,
+//       if (p.postalCode?.isNotEmpty == true) p.postalCode!,
+//       if (p.country?.isNotEmpty == true) p.country!,
+//     ];
+//
+//
+//     state = parts.join(', ');
+//
+//     debugPrint('[ADDRESS] Updated → $state');
+//   } catch (e) {
+//     debugPrint('[ADDRESS][ERROR] Reverse geocode failed: $e');
+//   }
+// }
 
 
 //

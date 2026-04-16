@@ -8,6 +8,7 @@ class AuthStorageKeys {
   static const firebaseUid = 'firebase_uid';
   static const mobileNumber = 'mobile_number';
   static const deviceId = 'device_id';
+  static const userId = 'user_id';
 }
 
 /// ************************************************************************
@@ -20,9 +21,19 @@ class SecureStorageService {
     await _storage.write(key: key, value: value);
   }
 
+  // Future<String?> read(String key) async {
+  //   return await _storage.read(key: key);
+  // }
+
   Future<String?> read(String key) async {
-    return await _storage.read(key: key);
+    try {
+      return await _storage.read(key: key);
+    } catch (e) {
+      await _storage.deleteAll();
+      return null;
+    }
   }
+
 
   Future<void> delete(String key) async {
     await _storage.delete(key: key);
